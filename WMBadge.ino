@@ -7,15 +7,20 @@
  */
 
 #include <Charlieplex.h>
+#include <avr/sleep.h>
+#include <avr/interrupt.h>
+
 
 
 const int ledPin1 = 1;    // Charlieplexed for 6 LEDs
 const int ledPin2 = 2;
 const int ledPin3 = 0;
 const int ledDelay = 500;
+const int startBttn = 3;
+bool turnedOn = false;
 
-
-#define NUMBER_OF_PINS 3  //define pins in the order you want to adress them
+#define NUMBER_OF_PINS 3
+//define pins in the order you want to adress them
 byte pins[] = {ledPin1, ledPin2, ledPin3};
 
 
@@ -29,14 +34,29 @@ charliePin led4 = { 2, 0 };
 charliePin led5 = { 2, 1 };
 charliePin led6 = { 1, 0 };
 
-void setup() {}
+void setup()
+{
+    pinMode(startBttn, INPUT_PULLUP);
+}
 
 void loop() {
-    for(int i=0; i<3; i++)
-        spinClockwise();
-    delay(100);
-    for(int i=0; i<3; i++)
-        spinCounterClosewise();
+    boolean bttnState = digitalRead(startBttn); // Check state of button
+    if (bttnState == LOW)
+    {
+        if(turnedOn == true) turnedOn = false;
+        else turnedOn = true;
+    }
+
+    if(turnedOn == true)
+    {
+        for(int i=0; i<3; i++)
+            spinClockwise();
+        delay(100);
+        for(int i=0; i<3; i++)
+            spinCounterClosewise();
+    }
+    else
+        sleep();
 }
 
 void spinClockwise()
@@ -91,4 +111,31 @@ void spinCounterClosewise()
     charlieplex.charlieWrite(led1,HIGH);
     delay(ledDelay);
     charlieplex.clear();
+}
+
+void sleep() {
+
+    GIMSK |= _BV(PCIE);                     // Enable Pin Change Interrupts
+    PCMSK |= _BV(PCINT2);                   // Use PB2 as interrupt pin
+    PCMSK |= _BV(PCINT3);                   // Use PB3 as interrupt pin
+    PCMSK |= _BV(PCINT4);                   // Use PB4 as interrupt pin
+    ADCSRA &= ~_BV(ADEN);                   // ADC off
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // replaces above statement
+
+    sleep_enable();                         // Sets the Sleep Enable bit in the MCUCR Register (SE BIT)
+    sei();                                  // Enable interrupts
+    sleep_cpu();                            // sleep
+
+    cli();                                  // Disable interrupts
+    PCMSK &= ~_BV(PCINT2);                  // Turn off PB2 as interrupt pin
+    PCMSK &= ~_BV(PCINT3);                  // Turn off PB3 as interrupt pin
+    PCMSK &= ~_BV(PCINT4);                  // Turn off PB4 as interrupt pin
+    sleep_disable();                        // Clear SE bit
+    ADCSRA |= _BV(ADEN);                    // ADC on
+
+    sei();                                  // Enable interrupts
+} // sleep
+
+ISR(PCINT0_vect) {
+    // This is called when the interrupt occurs, but I don't need to do anything in it
 }
