@@ -18,6 +18,7 @@ const int ledPin3 = 0;
 const int ledDelay = 500;
 const int startBttn = 3;
 bool turnedOn = false;
+boolean bttnState;
 
 #define NUMBER_OF_PINS 3
 //define pins in the order you want to adress them
@@ -34,13 +35,29 @@ charliePin led4 = { 2, 0 };
 charliePin led5 = { 2, 1 };
 charliePin led6 = { 1, 0 };
 
+typedef struct
+{
+    charliePin name;
+} LEDS;
+
+LEDS flash[6] {
+    {led1},
+    {led2},
+    {led3},
+    {led4},
+    {led5},
+    {led6}
+};
+
+
+
 void setup()
 {
     pinMode(startBttn, INPUT_PULLUP);
 }
 
 void loop() {
-    boolean bttnState = digitalRead(startBttn); // Check state of button
+    bttnState = digitalRead(startBttn); // Check state of button
     if (bttnState == LOW)
     {
         if(turnedOn == true) turnedOn = false;
@@ -49,9 +66,11 @@ void loop() {
 
     if(turnedOn == true)
     {
+        delay(500);
         for(int i=0; i<3; i++)
             spinClockwise();
-        delay(100);
+
+        delay(1000);
         for(int i=0; i<3; i++)
             spinCounterClosewise();
     }
@@ -61,56 +80,61 @@ void loop() {
 
 void spinClockwise()
 {
-    charlieplex.charlieWrite(led1,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+    for(int i = 0; i<=5; i++)
+    {
+        bttnState = digitalRead(startBttn);
+        if(bttnState == LOW)
+        {
+            turnedOn = false;
+            break;
+        }
 
-    charlieplex.charlieWrite(led2,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
-
-    charlieplex.charlieWrite(led3,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
-
-    charlieplex.charlieWrite(led4,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
-
-    charlieplex.charlieWrite(led5,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
-
-    charlieplex.charlieWrite(led6,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+        charlieplex.charlieWrite(flash[i].name,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
+    }
 }
 
 void spinCounterClosewise()
 {
-    charlieplex.charlieWrite(led6,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+    for(int i = 5; i>=0; i--)
+    {
+        bttnState = digitalRead(startBttn);
+        if(bttnState == LOW)
+        {
+            turnedOn = false;
+            break;
+        }
 
-    charlieplex.charlieWrite(led5,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+        charlieplex.charlieWrite(flash[i].name,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
+    }
+    /*
+        charlieplex.charlieWrite(led6,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
 
-    charlieplex.charlieWrite(led4,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+        charlieplex.charlieWrite(led5,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
 
-    charlieplex.charlieWrite(led3,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+        charlieplex.charlieWrite(led4,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
 
-    charlieplex.charlieWrite(led2,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+        charlieplex.charlieWrite(led3,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
 
-    charlieplex.charlieWrite(led1,HIGH);
-    delay(ledDelay);
-    charlieplex.clear();
+        charlieplex.charlieWrite(led2,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
+
+        charlieplex.charlieWrite(led1,HIGH);
+        delay(ledDelay);
+        charlieplex.clear();
+        * */
 }
 
 void sleep() {
