@@ -68,10 +68,15 @@ void loop() {
     if(turnedOn == true)
     {
         for(int i=0; i<3; i++)
-            spinClockwise();
-
+        {
+            if(turnedOn == true)
+              spinClockwise();
+        }
         for(int i=0; i<3; i++)
-            spinCounterClosewise();
+        {
+            if(turnedOn == true)
+              spinCounterClosewise();
+        }
     }
     else
         sleep();
